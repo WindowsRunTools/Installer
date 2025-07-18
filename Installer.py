@@ -14,7 +14,7 @@ import winreg as reg
 import ctypes
 
 # === Config ===
-SHEET_ID = "1c8gg13-GlvBaxH06XiTsfmcyT20Ukdt9Up0ix2JV38E"
+SHEET_ID = "" 
 CSV_URL = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/gviz/tq?tqx=out:csv"
 DESTINATION_FOLDER = Path("C:/Program Files/WRT")
 EXE_NAME = "WindowsRunTool.exe"
