@@ -12,9 +12,10 @@ import sys
 from io import StringIO
 import winreg as reg
 import ctypes
+import shutil
 
 # === Config ===
-SHEET_ID = "" 
+SHEET_ID = "1c8gg13-GlvBaxH06XiTsfmcyT20Ukdt9Up0ix2JV38E"
 CSV_URL = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/gviz/tq?tqx=out:csv"
 DESTINATION_FOLDER = Path("C:/Program Files/WRT")
 EXE_NAME = "WindowsRunTool.exe"
@@ -88,12 +89,33 @@ def download_and_extract_zip(zip_url, destination_folder, callback):
         print("Erreur de téléchargement ou d'extraction:", e)
         callback(success=False)
 
+# === Remove WRT ===
+def remove_wrt_installation():
+    # remove .exe and file
+    try:
+        if DESTINATION_FOLDER.exists():
+            shutil.rmtree(DESTINATION_FOLDER)
+            print(f"Dossier {DESTINATION_FOLDER} supprimé avec succès.")
+        else:
+            print(f"Dossier {DESTINATION_FOLDER} introuvable, aucune suppression.")
+    except Exception as e:
+        print(f"Erreur lors de la suppression du dossier : {e}")
+
+    # Remove key
+    try:
+        reg.DeleteKey(reg.HKEY_CURRENT_USER, REGISTRY_PATH)
+        print(f"Clé de registre {REGISTRY_PATH} supprimée avec succès.")
+    except FileNotFoundError:
+        print("Clé de registre introuvable, aucune suppression.")
+    except Exception as e:
+        print(f"Erreur lors de la suppression de la clé de registre : {e}")
+
 # === Interface graphique ===
 class UpdaterApp:
     def __init__(self, root):
         self.root = root
         self.root.title("WRT - Gestionnaire de mises à jour et d'installation")
-        self.root.geometry("600x400")
+        self.root.geometry("600x600")
         self.root.resizable(False, False)
 
         def get_resource_path(relative_path):
@@ -127,13 +149,16 @@ class UpdaterApp:
         self.label.pack(pady=10)
 
         self.listbox = tk.Listbox(root, height=10, font=("Segoe UI", 10), activestyle='dotbox')
-        self.listbox.pack(padx=20, pady=10, fill=tk.BOTH, expand=True)
+        self.listbox.pack(padx=10, pady=10, fill=tk.BOTH, expand=True)
 
         self.refresh_button = tk.Button(root, text="Rafraîchir", command=self.load_versions)
         self.refresh_button.pack(pady=5)
 
         self.download_button = tk.Button(root, text="Télécharger et installer", command=self.install_selected_version)
         self.download_button.pack(pady=10)
+
+        self.removed_button = tk.Button(root, text="Désinstaller", command=self.confirm_uninstall)
+        self.removed_button.pack(pady=10)
 
         self.lbl_version = tk.Label(root, text=f"Version installée : {version}", font=("Arial", 10), borderwidth=0.5, fg="red")
         self.lbl_version.pack(pady=20)
@@ -178,6 +203,17 @@ class UpdaterApp:
         else:
             self.status_label.config(text="Échec du téléchargement ou de l'installation.", foreground="red")
         self.download_button.config(state=tk.NORMAL)
+
+    
+    def confirm_uninstall(self):
+        answer = messagebox.askyesno(
+            "Confirmation",
+            "Êtes-vous sûr de vouloir désinstaller WRT ?"
+        )
+        if answer:
+            remove_wrt_installation()
+            messagebox.showinfo("Désinstallation", "WRT a été désinstallé avec succès.")
+
 
 # === Start ===
 if __name__ == "__main__":
